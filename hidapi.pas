@@ -45,7 +45,7 @@ type
   THidDevice = object
     function Write(const Data; Length: SizeInt): SizeInt;
     function Read(out Data; Length: SizeInt): SizeInt;
-    function ReadTimeout(out Data; Length: SizeInt; Millis: cint): SizeInt;
+    function ReadTimeout(out Data; Length: SizeInt; Millis: Integer): SizeInt;
     function SetNonBlocking(NonBlock: Integer): Integer;
     function SendFeatureReport(const Data; Length: SizeInt): SizeInt;
     function GetFeatureReport(out Data; Length: SizeInt): SizeInt;
@@ -180,7 +180,7 @@ begin
   Result :=  hid_read(@Self, @Data, Length);
 end;
 
-function THidDevice.ReadTimeout(out Data; Length: SizeInt; Millis: cint): SizeInt;
+function THidDevice.ReadTimeout(out Data; Length: SizeInt; Millis: Integer): SizeInt;
 begin
   Result :=  hid_read_timeout(@Self, @Data, Length, Millis);
 end;
