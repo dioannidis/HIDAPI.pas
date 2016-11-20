@@ -54,8 +54,8 @@ type
     function GetSerialNumberString: UnicodeString;
     function GetIndexedString(Index: Integer): UnicodeString;
     procedure Close;
-    function HidOpen(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice; static;
-    function HidOpenPath(Path: String): PHidDevice; static;
+    function Open(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice; static;
+    function OpenPath(Path: String): PHidDevice; static;
   end;
 
   { THidDeviceInfo }
@@ -116,6 +116,9 @@ var
   WS: array of TCWChar;
 
 begin
+  if not Assigned(P) then
+    exit('');
+
   // strlen
   L := 0;
   while P[L] <> 0 do begin
@@ -134,16 +137,11 @@ begin
 end;
 
 function UnicodeStringToTCWCharNullterminated(S: UnicodeString): TCWCharArray;
-var
-  NumChars: Integer;
 begin
   // the chars are of size 4, so we
   // can use the UCS4 functions
   // NOT SO ON WINDOWS!
   Result := UnicodeStringToUCS4String(S);
-  NumChars := Length(Result);
-  SetLength(Result, NumChars + 1);
-  Result[NumChars] := 0;
 end;
 
 { Initialize and deinitialize the HIDAPI }
@@ -239,15 +237,18 @@ begin
   hid_close(@Self);
 end;
 
-function THidDevice.HidOpen(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice;
+function THidDevice.Open(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice;
 var
   WS: TCWCharArray;
 begin
   WS := UnicodeStringToTCWCharNullterminated(Serial);
-  Result := hid_open(VID, PID, @WS[0]);
+  if Length(WS) > 1 then
+    Result := hid_open(VID, PID, @WS[0])
+  else
+    Result := hid_open(VID, PID, nil);
 end;
 
-function THidDevice.HidOpenPath(Path: String): PHidDevice;
+function THidDevice.OpenPath(Path: String): PHidDevice;
 begin
   Result :=  hid_open_path(PChar(Path));
 end;
