@@ -30,10 +30,9 @@ unit hidapi;
 interface
 
 uses
-  Classes, SysUtils
+  Classes, SysUtils;
 
 {$ifdef MSWINDOWS}
-;
 
 {$if FPC_FULLVERSION > 30004}
   {$define HIDAPI_CALL := WINAPI }
@@ -51,7 +50,6 @@ type
   TCWCharArray = array of TCWChar;
 
 {$else}
-, ctypes;
 
 {$define HIDAPI_CALL := cdecl }
 
@@ -107,7 +105,7 @@ type
     ProductString: PCWChar;
     UsagePage: Word;
     Usage: Word;
-    InterfaceNumber: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif};
+    InterfaceNumber: Integer;
     Next: PHidDeviceInfo;
     function Enumerate(VID: Word; PID: Word): PHidDeviceInfo; static;
 {$ifdef MSWINDOWS}
@@ -127,23 +125,23 @@ implementation
 
 { imported external API functions }
 
-function hid_init: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_exit: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
+function hid_init: Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_exit: Integer; HIDAPI_CALL; external LIBHIDAPI;
 function hid_enumerate(vendor_id: Word; product_id: Word): PHidDeviceInfo; HIDAPI_CALL; external LIBHIDAPI;
 procedure hid_free_enumeration(devs: PHidDeviceInfo); HIDAPI_CALL; external LIBHIDAPI;
 function hid_open(vendor_id: Word; product_id: Word; serial_number: PCWChar): PHidDevice; HIDAPI_CALL; external LIBHIDAPI;
 function hid_open_path(path: PChar): PHidDevice; HIDAPI_CALL; external LIBHIDAPI;
-function hid_write(device: PHidDevice; Data: Pointer; length: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_read_timeout(device: PHidDevice; Data: Pointer; length: SizeInt; millisec: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_read(device: PHidDevice; Data: Pointer; length: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_set_nonblocking(device: PHidDevice; nonblock: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_send_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
+function hid_write(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_read_timeout(device: PHidDevice; Data: Pointer; length: SizeInt; millisec: Integer): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_read(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_set_nonblocking(device: PHidDevice; nonblock: Integer): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_send_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
 procedure hid_close(device: PHidDevice); HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_manufacturer_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_product_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_serial_number_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_indexed_string(device: PHidDevice; string_index: {$ifdef MSWINDOWS}LongInt{$else}cint{$endif}; str: PCWChar; maxlen: SizeInt): longint; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_manufacturer_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_product_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_serial_number_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_indexed_string(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): longint; HIDAPI_CALL; external LIBHIDAPI;
 function hid_error(device: PHidDevice): PCWChar; HIDAPI_CALL; external LIBHIDAPI;
 {$ifdef MSWINDOWS}
 function hid_version_str: PChar; HIDAPI_CALL; external LIBHIDAPI;
