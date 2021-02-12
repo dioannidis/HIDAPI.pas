@@ -56,7 +56,12 @@ type
 {$define HIDAPI_CALL := cdecl }
 
 const
+{$IFDEF Darwin}
+  LIBHIDAPI = 'hidapi';
+  {$linklib hidapi}
+{$ELSE}
   LIBHIDAPI = 'hidapi-libusb';
+{$ENDIF}
 
 type
   PCWChar = ^TCWChar;
