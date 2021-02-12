@@ -47,8 +47,6 @@ type
   PCWChar = PWideChar;
   TCWChar = WideChar;
 
-  TCWCharArray = array of TCWChar;
-
 {$else}
 
 {$define HIDAPI_CALL := cdecl }
@@ -65,9 +63,9 @@ type
   PCWChar = ^TCWChar;
   TCWChar = UCS4Char;  // wchar_t of size 4 (NOT ON WINDOWS!)
 
-  TCWCharArray = array of TCWChar;
-
 {$endif}
+
+TCWCharArray = array of TCWChar;
 
 type
 
@@ -141,7 +139,7 @@ procedure hid_close(device: PHidDevice); HIDAPI_CALL; external LIBHIDAPI;
 function hid_get_manufacturer_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
 function hid_get_product_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
 function hid_get_serial_number_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
-function hid_get_indexed_string(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): longint; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_indexed_string(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
 function hid_error(device: PHidDevice): PCWChar; HIDAPI_CALL; external LIBHIDAPI;
 {$ifdef MSWINDOWS}
 function hid_version_str: PChar; HIDAPI_CALL; external LIBHIDAPI;
