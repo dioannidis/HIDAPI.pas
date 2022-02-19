@@ -1,5 +1,5 @@
 # HIDAPI.pas
-[linusb/hidapi] Free Pascal bindings, based on [HIDAPI.pas], for Linux, Windows and MacOS.
+[libusb/hidapi] Free Pascal bindings, based on [HIDAPI.pas], for Linux, Windows and MacOS.
 
 ## Usage
 
@@ -55,5 +55,5 @@ Or when opening a device from a Path you could do it like this:
     
 Without the autoderef modeswitch you would have to write it like  Device^.Read or LinkedList^.Free, this looks ugly, the autoderef will dereference the pointer to the object automatically.
 
-[linusb/hidapi]: <https://github.com/libusb/hidapi>
+[libusb/hidapi]: <https://github.com/libusb/hidapi>
 [HIDAPI.pas]: <https://github.com/prof7bit/HIDAPI.pas>
