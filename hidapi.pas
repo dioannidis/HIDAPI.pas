@@ -1,6 +1,7 @@
 { HIDAPI.pas - Bindings for libhidapi
 
   Copyright (C) 2016 Bernd Kreuss <prof7bit@gmail.com>
+  Copyright (C) 2021 Dimitrios Chr. Ioannidis <d.ioannidis@nephelae.eu>
 
   This library is free software; you can redistribute it and/or modify it under the terms of the GNU Library General
   Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)
@@ -24,24 +25,54 @@
 unit hidapi;
 
 {$mode objfpc}{$H+}
+{$macro on}
 
 interface
 
 uses
-  Classes, SysUtils, ctypes;
+  Classes, SysUtils;
+
+{$ifdef MSWINDOWS}
+
+{$if FPC_FULLVERSION > 30004}
+  {$define HIDAPI_CALL := WINAPI }
+{$else}
+  {$define HIDAPI_CALL := stdcall }
+{$endif}
 
 const
+  LIBHIDAPI = 'hidapi.dll';
+
+type
+  PCWChar = PWideChar;
+  TCWChar = WideChar;
+
+{$else}
+
+{$define HIDAPI_CALL := cdecl }
+
+const
+{$IFDEF Darwin}
+  LIBHIDAPI = 'hidapi';
+  {$linklib hidapi}
+{$ELSE}
   LIBHIDAPI = 'hidapi-libusb';
+{$ENDIF}
 
 type
   PCWChar = ^TCWChar;
   TCWChar = UCS4Char;  // wchar_t of size 4 (NOT ON WINDOWS!)
 
-  TCWCharArray = array of TCWChar;
+{$endif}
+
+TCWCharArray = array of TCWChar;
+
+type
 
   { THidDevice }
 
   PHidDevice = ^THidDevice;
+
   THidDevice = object
     function Write(const Data; Length: SizeInt): SizeInt;
     function Read(out Data; Length: SizeInt): SizeInt;
@@ -54,13 +85,14 @@ type
     function GetSerialNumberString: UnicodeString;
     function GetIndexedString(Index: Integer): UnicodeString;
     procedure Close;
-    function Open(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice; static;
+    function Open(VID: Word; PID: Word; Serial: {$ifdef MSWINDOWS}String{$else}UnicodeString{$endif}): PHidDevice; static;
     function OpenPath(Path: String): PHidDevice; static;
   end;
 
   { THidDeviceInfo }
 
   PHidDeviceInfo = ^THidDeviceInfo;
+
   THidDeviceInfo = object
     Path: PChar;
     VendorID: Word;
@@ -71,9 +103,12 @@ type
     ProductString: PCWChar;
     UsagePage: Word;
     Usage: Word;
-    InterfaceNumber: cint;
+    InterfaceNumber: Integer;
     Next: PHidDeviceInfo;
     function Enumerate(VID: Word; PID: Word): PHidDeviceInfo; static;
+{$ifdef MSWINDOWS}
+    function GetHidApiVersion: string; static;
+{$endif}
     procedure Free;
   end;
 
@@ -88,34 +123,42 @@ implementation
 
 { imported external API functions }
 
-function hid_init: cint; cdecl; external LIBHIDAPI;
-function hid_exit: cint; cdecl; external LIBHIDAPI;
-function hid_enumerate(vendor_id: Word; product_id: Word): PHidDeviceInfo; cdecl; external LIBHIDAPI;
-procedure hid_free_enumeration(devs: PHidDeviceInfo); cdecl; external LIBHIDAPI;
-function hid_open(vendor_id: Word; product_id: Word; serial_number: PCWChar): PHidDevice; cdecl; external LIBHIDAPI;
-function hid_open_path(path: PChar): PHidDevice; cdecl; external LIBHIDAPI;
-function hid_write(device: PHidDevice; data: Pointer; length: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_read_timeout(device: PHidDevice; data: Pointer; length: SizeInt; millisec: cint): cint; cdecl; external LIBHIDAPI;
-function hid_read(device: PHidDevice; data: Pointer; length: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_set_nonblocking(device: PHidDevice; nonblock: cint): cint; cdecl; external LIBHIDAPI;
-function hid_send_feature_report(device: PHidDevice; data: Pointer; length: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_get_feature_report(device: PHidDevice; data: Pointer; length: SizeInt): cint; cdecl; external LIBHIDAPI;
-procedure hid_close(device: PHidDevice); cdecl; external LIBHIDAPI;
-function hid_get_manufacturer_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_get_product_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_get_serial_number_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_get_indexed_string(device: PHidDevice; string_index: cint; str: PCWChar; maxlen: SizeInt): cint; cdecl; external LIBHIDAPI;
-function hid_error(device: PHidDevice): PCWChar; cdecl; external LIBHIDAPI;
-
+function hid_init: Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_exit: Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_enumerate(vendor_id: Word; product_id: Word): PHidDeviceInfo; HIDAPI_CALL; external LIBHIDAPI;
+procedure hid_free_enumeration(devs: PHidDeviceInfo); HIDAPI_CALL; external LIBHIDAPI;
+function hid_open(vendor_id: Word; product_id: Word; serial_number: PCWChar): PHidDevice; HIDAPI_CALL; external LIBHIDAPI;
+function hid_open_path(path: PChar): PHidDevice; HIDAPI_CALL; external LIBHIDAPI;
+function hid_write(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_read_timeout(device: PHidDevice; Data: Pointer; length: SizeInt; millisec: Integer): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_read(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_set_nonblocking(device: PHidDevice; nonblock: Integer): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_send_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_feature_report(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+procedure hid_close(device: PHidDevice); HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_manufacturer_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_product_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_serial_number_string(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_get_indexed_string(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; external LIBHIDAPI;
+function hid_error(device: PHidDevice): PCWChar; HIDAPI_CALL; external LIBHIDAPI;
+{$ifdef MSWINDOWS}
+function hid_version_str: PChar; HIDAPI_CALL; external LIBHIDAPI;
+{$endif}
 
 { helper functions for dealing with widechar strings }
 
 function PCWCharToUnicodeString(P: PCWChar): UnicodeString;
+{$ifdef MSWINDOWS}
+{$else}
 var
   L: Integer;
   WS: array of TCWChar;
+{$endif}
 
 begin
+{$ifdef MSWINDOWS}
+  Result := P;
+{$else}
   if not Assigned(P) then
     exit('');
 
@@ -134,8 +177,11 @@ begin
   // the existing UCS4 function.
   // NOT SO ON WINDOWS!
   Result := UCS4StringToUnicodeString(WS);
+{$endif}
 end;
 
+{$ifdef MSWINDOWS}
+{$else}
 function UnicodeStringToTCWCharNullterminated(S: UnicodeString): TCWCharArray;
 begin
   // the chars are of size 4, so we
@@ -143,6 +189,7 @@ begin
   // NOT SO ON WINDOWS!
   Result := UnicodeStringToUCS4String(S);
 end;
+{$endif}
 
 { Initialize and deinitialize the HIDAPI }
 
@@ -162,6 +209,13 @@ function THidDeviceInfo.Enumerate(VID: Word; PID: Word): PHidDeviceInfo;
 begin
   Result :=  hid_enumerate(VID, PID);
 end;
+
+{$ifdef MSWINDOWS}
+function THidDeviceInfo.GetHidApiVersion: string;
+begin
+  result := hid_version_str;
+end;
+{$endif}
 
 procedure THidDeviceInfo.Free;
 begin
@@ -237,13 +291,26 @@ begin
   hid_close(@Self);
 end;
 
-function THidDevice.Open(VID: Word; PID: Word; Serial: UnicodeString): PHidDevice;
+function THidDevice.Open(VID: Word; PID: Word; Serial: {$ifdef MSWINDOWS}String{$else}UnicodeString{$endif}): PHidDevice;
 var
+{$ifdef MSWINDOWS}
+  WS: UnicodeString;
+{$else}
   WS: TCWCharArray;
+{$endif}
 begin
+{$ifdef MSWINDOWS}
+  WS := Serial;
+{$else}
   WS := UnicodeStringToTCWCharNullterminated(Serial);
+{$endif}
+
   if Length(WS) > 1 then
+{$ifdef MSWINDOWS}
+    Result := hid_open(VID, PID, PCWChar(WS))
+{$else}
     Result := hid_open(VID, PID, @WS[0])
+{$endif}
   else
     Result := hid_open(VID, PID, nil);
 end;
@@ -255,7 +322,8 @@ end;
 
 initialization
   HidInit;
+
 finalization
   HidExit;
-end.
 
+end.
