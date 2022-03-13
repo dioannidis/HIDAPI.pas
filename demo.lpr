@@ -7,7 +7,6 @@ program demo;
 uses
   sysutils, hidapi;
 
-
 procedure EnumerationDemo;
 var
   EnumList, EnumItem: PHidDeviceInfo;
@@ -17,8 +16,10 @@ var
 
 begin
   WriteLn('will now enumerate all USB HID devices.');
+{$ifndef MSWINDOWS}
   WriteLn('Note that it will list more info if you run with sudo,');
   WriteLn('you might want to add an udev rule for your device.');
+{$endif}
   WriteLn();
 
   // request the hidapi to build a linked list of all HID devices
@@ -42,7 +43,6 @@ begin
   EnumList.Free;
 end;
 
-
 procedure OpenAndReadDemo;
 const
   // This is a Logitech Extreme 3D Joystick, a
@@ -52,6 +52,13 @@ const
   DEMO_VID = $046D;
   DEMO_PID = $C215;
 
+  // USBasp
+  //DEMO_VID = $16c0;
+  //DEMO_PID = $05dc;
+
+  // MPlab Snap
+  //DEMO_VID = $03eb;
+  //DEMO_PID = $2180;
 var
   Device: PHidDevice;
   I, J, Num: Integer;
@@ -81,9 +88,10 @@ begin
   end;
 end;
 
-
 begin
+  HidInit('');
+  //HidInit('hidapi-0.10.0.dll');
   EnumerationDemo;
   OpenAndReadDemo;
+  HidExit();
 end.
-
