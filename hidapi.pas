@@ -226,10 +226,10 @@ function THidDevice.GetInputReport(const Data; Length: SizeInt): SizeInt;
 begin
   Result := -1;
 {$if (HIDAPI_VERSION > 0090) and defined(S)}
-  hid_get_input_report(@Self, @Data, Length);
+  Result := hid_get_input_report(@Self, @Data, Length);
 {$elseif defined(D)}
   if Pointer(hid_get_input_report) <> nil then
-    hid_get_input_report(@Self, @Data, Length);
+    Result := hid_get_input_report(@Self, @Data, Length);
 {$endif}
 end;
 
