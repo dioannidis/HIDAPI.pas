@@ -5,7 +5,8 @@ program demo;
 {$modeswitch autoderef}
 
 uses
-  sysutils, hidapi;
+  sysutils,
+  hidapi_dyn; // Dynamic loading of hidapi library. For static loading use hidapi.pas .
 
 procedure EnumerationDemo;
 var
@@ -17,6 +18,7 @@ var
 begin
   WriteLn('will now enumerate all USB HID devices.');
 {$ifndef MSWINDOWS}
+  WriteLn();
   WriteLn('Note that it will list more info if you run with sudo,');
   WriteLn('you might want to add an udev rule for your device.');
 {$endif}
@@ -76,7 +78,7 @@ begin
     WriteLn('Manufacturer: ', Device.GetManufacturerString);
     WriteLn('Product: ', Device.GetProductString);
     for I := 1 to 1000 do begin
-      Num := Device.Read(Buffer, SizeOf(Buffer));
+      Num := Device.ReadTimeout(Buffer, SizeOf(Buffer), 250);
       for J := 0 to Num - 1 do begin
           Write(Format('%0.2x ', [Buffer[J]]));
       end;
