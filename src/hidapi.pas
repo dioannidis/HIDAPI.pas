@@ -24,6 +24,7 @@
 }
 unit hidapi;
 
+{$define HIDAPI_LOAD_DYNAMICALLY}
 {$i hidapi.inc}
 
 end.

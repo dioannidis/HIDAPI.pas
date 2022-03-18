@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="hidapi_pkg"/>
+    <Type Value="RunTimeOnly"/>
     <Author Value="Bernd Kreuss &lt;prof7bit@gmail.com>, Dimitrios Chr. Ioannidis &lt;d.ioannidis@nephelae.eu>"/>
     <CompilerOptions>
       <Version Value="11"/>
@@ -20,7 +21,6 @@
         <UnitName Value="hidapi"/>
       </Item1>
     </Files>
-    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="FCL"/>

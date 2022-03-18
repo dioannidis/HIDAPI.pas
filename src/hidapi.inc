@@ -93,8 +93,10 @@ uses
   0.11.2                  0112
 }
   {$ifndef HIDAPI_VERSION}
-    {$ERROR For static linking you need to define the version of the HidApi library.
-     i.e. for 0.9.0 use HIDAPI_VERSION = 0090 or for 0.10.0 HIDAPI_VERSION = 0100 }
+    {$warning For static loading you need to define the version of the HidApi library. }
+    {$warning i.e. for 0.9.0 use HIDAPI_VERSION = 0090 or for 0.10.0 HIDAPI_VERSION = 0100 etc. }
+    {$warning else static loading defaults to 0.9.0 hidapi version library .}
+     {$define HIDAPI_VERSION := 0090}
   {$endif}
 {$endif}
 
