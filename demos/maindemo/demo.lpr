@@ -6,7 +6,7 @@ program demo;
 
 uses
   sysutils,
-  hidapi_dyn; // Dynamic loading of hidapi library. For static loading use hidapi.pas .
+  hidapi; // Dynamic loading of hidapi library. For static loading use hidapi_static.pas .
 
 procedure EnumerationDemo;
 var
