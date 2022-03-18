@@ -1,4 +1,4 @@
 *.lps
-/demo
-/lib
-/backup
+demo/
+lib/
+backup/
