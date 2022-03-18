@@ -8,7 +8,7 @@ unit hidapi_pkg;
 interface
 
 uses
-  hidapi;
+  hidapi_dyn;
 
 implementation
 
