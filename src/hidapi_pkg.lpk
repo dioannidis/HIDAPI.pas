@@ -16,8 +16,8 @@
     <Version Minor="3"/>
     <Files Count="1">
       <Item1>
-        <Filename Value="hidapi.pas"/>
-        <UnitName Value="hidapi"/>
+        <Filename Value="hidapi_dyn.pas"/>
+        <UnitName Value="hidapi_dyn"/>
       </Item1>
     </Files>
     <CompatibilityMode Value="True"/>
