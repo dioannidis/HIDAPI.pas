@@ -102,7 +102,7 @@ uses
 
 {$ifdef MSWINDOWS}
 
-{$if FPC_FULLVERSION > 30004}
+{$if FPC_FULLVERSION > 30200}
   {$define HIDAPI_CALL := WINAPI }
 {$else}
   {$define HIDAPI_CALL := stdcall }
