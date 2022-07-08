@@ -74,9 +74,14 @@ begin
     WriteLn('could not open device');
   end
   else begin
-    WriteLn('device is open, now going to read data from it');
-    WriteLn('Manufacturer: ', Device.GetManufacturerString);
-    WriteLn('Product: ', Device.GetProductString);
+    WriteLn('device is open ...');
+    WriteLn();
+    WriteLn('Container ID : ', Device.GetContainerID.ToString());
+    WriteLn('Manufacturer : ', Device.GetManufacturerString);
+    WriteLn('Product      : ', Device.GetProductString);
+    WriteLn();
+    WriteLn('... now going to read data from it');
+    WriteLn();
     for I := 1 to 1000 do begin
       Num := Device.ReadTimeout(Buffer, SizeOf(Buffer), 250);
       for J := 0 to Num - 1 do begin

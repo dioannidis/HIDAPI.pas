@@ -41,6 +41,7 @@ type
     function GetSerialNumberString: UnicodeString;
     function GetIndexedString(Index: Integer): UnicodeString;
     function GetError: UnicodeString;
+    function GetContainerID: TGuid;
     procedure Close;
     function Open(VID: Word;PID: Word;const SerialNumber: {$ifdef MSWINDOWS}String{$else}UnicodeString{$endif}): PHidDevice; static;
     function OpenPath(const DevicePath: String): PHidDevice; static;
@@ -91,6 +92,7 @@ uses
   0.9.0                   0090
   0.10.0                  0100
   0.11.2                  0112
+  0.12.0                  0120
 }
   {$ifndef HIDAPI_VERSION}
     {$warning For static loading you need to define the version of the HidApi library. }
@@ -153,7 +155,9 @@ const
 {$if (HIDAPI_VERSION > 0090) or defined(D)}
 {$ifdef S}function{$else}var{$endif}hid_version_str{$ifdef D}: function{$endif}: PChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$endif}
-
+{$if (HIDAPI_VERSION > 0120) or defined(D)}
+{$ifdef S}function{$else}var{$endif}hid_winapi_get_container_id{$ifdef D}: function{$endif}(device: PHidDevice; container_id: Pointer): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$endif}
 
 {$ifdef HIDAPI_LOAD_DYNAMICALLY}
 
@@ -196,6 +200,7 @@ begin
     Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
     Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
     Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
+    Pointer(hid_winapi_get_container_id)  := GetProcAddress(HidApiLibraryHandle, 'hid_winapi_get_container_id');
   end
   else
     Inc(HidApiLibraryRefCount);
@@ -397,6 +402,23 @@ end;
 function THidDevice.GetError: UnicodeString;
 begin
   Result := PCWCharToUnicodeString(hid_error(@Self));
+end;
+
+function THidDevice.GetContainerID: TGuid;
+var
+  Buf: array[1..SizeOf(TGuid)] of Byte;
+begin
+  Result := GUID_NULL;
+{$if (HIDAPI_VERSION > 0120) and defined(S)}
+  if hid_winapi_get_container_id(@Self, @Buf) = 0 then
+    Result := TGuid.Create(@Buf);
+{$elseif defined(D)}
+  if Pointer(hid_winapi_get_container_id) <> nil then
+  begin
+    if hid_winapi_get_container_id(@Self, @Buf) = 0 then
+      Result := TGuid.Create(@Buf);
+  end;
+{$endif}
 end;
 
 procedure THidDevice.Close;
