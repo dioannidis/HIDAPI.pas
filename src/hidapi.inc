@@ -416,7 +416,7 @@ begin
   if Pointer(hid_winapi_get_container_id) <> nil then
   begin
     if hid_winapi_get_container_id(@Self, @Buf) = 0 then
-      Result := TGuid.Create(@Buf);
+      Result := TGuid.Create(Buf);
   end;
 {$endif}
 end;
