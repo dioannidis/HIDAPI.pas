@@ -1,5 +1,5 @@
 # HIDAPI.pas
-[libusb/hidapi] Free Pascal bindings, based on [HIDAPI.pas], for Linux, Windows and MacOS.
+[libusb/hidapi] Free Pascal bindings, based on [HIDAPI.pas], for Linux, Windows, FreeBSD and MacOS.
 
 ## Usage
 
