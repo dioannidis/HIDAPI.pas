@@ -102,6 +102,7 @@ uses
   {$endif}
 {$endif}
 
+const
 {$ifdef MSWINDOWS}
 
 {$if FPC_FULLVERSION > 30200}
@@ -110,24 +111,27 @@ uses
   {$define HIDAPI_CALL := stdcall }
 {$endif}
 
-const
   LIBHIDAPI = 'hidapi.dll';
 
-{$else}
-
-{$define HIDAPI_CALL := cdecl }
-
-const
-{$ifdef Darwin}
-  LIBHIDAPI = 'hidapi';
-  {$linklib hidapi}
-{$else}
-  {$ifdef D}
-  LIBHIDAPI = 'libhidapi-libusb.so';
-  {$else}
-  LIBHIDAPI = 'hidapi-libusb';
-  {$endif}
 {$endif}
+
+{$ifdef UNIX}
+
+  {$define HIDAPI_CALL := cdecl }
+
+  {$ifdef LINUX}
+      LIBHIDAPI = 'libhidapi-libusb.so';
+  {$endif}
+  {$ifdef BSD}
+    {$ifdef FREEBSD}
+      LIBHIDAPI = 'libhidapi.so';
+      {$linklib libhidapi}
+    {$endif}
+    {$ifdef DARWIN}
+      LIBHIDAPI = 'hidapi';
+      {$linklib hidapi}
+    {$endif}
+  {$endif}
 
 {$endif}
 
@@ -167,7 +171,7 @@ ResourceString
 
 var
   HidApiLibraryRefCount: byte;
-  HidApiLibraryHandle: THandle;
+  HidApiLibraryHandle: TLibHandle;
   HidApiLoadedLibrary: String = '';
 
 function TryInitializeHidApi(LibraryName: string): byte;
