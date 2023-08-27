@@ -6,6 +6,10 @@ interface
 uses
   Classes, SysUtils;
 
+
+const
+  HID_API_MAX_REPORT_DESCRIPTOR_SIZE = 4096;
+
 {$ifdef MSWINDOWS}
 
 type
@@ -20,20 +24,17 @@ type
 
 {$endif}
 
-TCWCharArray = array of TCWChar;
+  TCWCharArray = array of TCWChar;
 
-type
-
-{$minEnumSize 1}
 
   { HID underlying bus types }
 
+{$minEnumSize 1}
   THidBusType  = (HID_API_BUS_UNKNOWN,
                   HID_API_BUS_USB,
                   HID_API_BUS_BLUETOOTH,
                   HID_API_BUS_I2C,
                   HID_API_BUS_SPI);
-
 {$minEnumSize default}
 
   { HidApiVersion }
@@ -81,6 +82,7 @@ type
     function GetSerialNumberString: UnicodeString;
     function GetDeviceInfo: PHidDeviceInfo;
     function GetIndexedString(Index: Integer): UnicodeString;
+    function GetReportDescriptor(out Data; Length: SizeInt): SizeInt;
     function GetError: UnicodeString;
     function GetContainerID: TGuid;
     procedure Close;
@@ -185,6 +187,9 @@ const
 {$ifdef S}function{$else}var{$endif}hid_get_device_info{$ifdef D}: function{$endif}(device: PHidDevice): PHidDeviceInfo; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$endif}
 {$ifdef S}function{$else}var{$endif}hid_get_indexed_string{$ifdef D}: function{$endif}(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$if (HIDAPI_VERSION > 0131) or defined(D)}
+{$ifdef S}function{$else}var{$endif}hid_get_report_descriptor{$ifdef D}: function{$endif}(device: PHidDevice; Data: Pointer; length: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$endif}
 {$ifdef S}function{$else}var{$endif}hid_error{$ifdef D}: function{$endif}(device: PHidDevice): PCWChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$ifdef S}function{$else}var{$endif}hid_version{$ifdef D}: function{$endif}:PHidApiVersion ; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$if (HIDAPI_VERSION > 0090) or defined(D)}
@@ -234,6 +239,7 @@ begin
     Pointer(hid_get_serial_number_string) := GetProcAddress(HidApiLibraryHandle, 'hid_get_serial_number_string');
     Pointer(hid_get_device_info)          := GetProcAddress(HidApiLibraryHandle, 'hid_get_device_info');
     Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
+    Pointer(hid_get_report_descriptor)    := GetProcAddress(HidApiLibraryHandle, 'hid_get_report_descriptor');
     Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
     Pointer(hid_version)                  := GetProcAddress(HidApiLibraryHandle, 'hid_version');
     Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
@@ -450,6 +456,17 @@ var
 begin
   hid_get_indexed_string(@Self, Index, @Buf, Length(Buf) - 1);
   Result := PCWCharToUnicodeString(@Buf);
+end;
+
+function THidDevice.GetReportDescriptor(out Data; Length: SizeInt): SizeInt;
+begin
+  Result := 0;
+{$if (HIDAPI_VERSION > 0131) and defined(S)}
+  hid_get_report_descriptor(@Self, @Data, Length);
+{$elseif defined(D)}
+  if Pointer(hid_get_report_descriptor) <> nil then
+    Result := hid_get_report_descriptor(@Self, @Data, Length);
+{$endif}
 end;
 
 function THidDevice.GetError: UnicodeString;
