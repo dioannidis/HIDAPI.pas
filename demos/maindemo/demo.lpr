@@ -13,8 +13,8 @@ var
   EnumList, EnumItem: PHidDeviceInfo;
   Path: String;
   Vid, Pid: Word;
+  BusType: String;
   ProductName: UnicodeString;
-
 begin
   WriteLn('will now enumerate all USB HID devices.');
 {$ifndef MSWINDOWS}
@@ -35,7 +35,13 @@ begin
     Vid := EnumItem.VendorID;
     Pid := EnumItem.ProductID;
     ProductName := PCWCharToUnicodeString(EnumItem.ProductString);
-    WriteLn(Format('Found: %s (%0.4x:%0.4x) at: %s', [ProductName, Vid, Pid, Path]));
+    if HidApiVersion.Minor > 12 then
+    begin
+      WriteStr(BusType, EnumItem.BusType);
+      WriteLn(Format('Found: %s in [%s] (%0.4x:%0.4x) at: %s', [ProductName, BusType, Vid, Pid, Path]))
+    end
+    else
+      WriteLn(Format('Found: %s (%0.4x:%0.4x) at: %s', [ProductName, Vid, Pid, Path]));
     EnumItem := EnumItem.Next;
   end;
   WriteLn();
@@ -55,17 +61,17 @@ const
   DEMO_PID = $C215;
 
   // USBasp
-  //DEMO_VID = $16c0;
-  //DEMO_PID = $05dc;
+  //DEMO_VID = $16C0;
+  //DEMO_PID = $05DC;
 
   // MPlab Snap
-  //DEMO_VID = $03eb;
+  //DEMO_VID = $03EB;
   //DEMO_PID = $2180;
 var
   Device: PHidDevice;
   I, J, Num: Integer;
   Buffer: array[0..63] of Byte;
-
+  ReportDescriptor: array[0..HID_API_MAX_REPORT_DESCRIPTOR_SIZE - 1] of Byte;
 begin
   WriteLn(Format('Will now try to open device %0.4x:%0.4x', [DEMO_VID, DEMO_PID]));
   WriteLn();
@@ -76,9 +82,31 @@ begin
   else begin
     WriteLn('device is open ...');
     WriteLn();
+
+    if HidApiVersion.Minor > 12 then
+      WriteLn('Bus Type     : ', Device.GetDeviceInfo.BusType)
+    else
+      WriteLn('Bus Type     : Not supported ( needs HidApi => 0.13.0 )');
+
+    if HidApiVersion.Minor > 13 then
+    begin
+      I := Device.GetReportDescriptor(ReportDescriptor, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
+      Write('Report Descr : ');
+      for J := 0  to I do
+          Write(Format('%0.2x ', [ReportDescriptor[J]]));
+      WriteLn();
+    end
+    else
+      WriteLn('Report Descr : Not supported ( needs HidApi => 0.14.0 )');
+
 {$ifdef MSWINDOWS}
-    WriteLn('Container ID : ', Device.GetContainerID.ToString());
+    if (HidApiVersion.Minor > 11) or
+       ((HidApiVersion.Minor = 11) and (HidApiVersion.Patch > 2)) then
+      WriteLn('Container ID : ', Device.GetContainerID.ToString())
+    else
+      WriteLn('Container ID : Not supported ( needs HidApi => 0.12.0 )');
 {$endif}
+
     WriteLn('Manufacturer : ', Device.GetManufacturerString);
     WriteLn('Product      : ', Device.GetProductString);
     WriteLn();
@@ -99,9 +127,8 @@ begin
 end;
 
 begin
-  HidInit('');
-  //HidInit('hidapi-0.10.0.dll');
-  WriteLn('HIDAPI.pas demo ( using HidApi ', HidApiVersion, ' library ).');
+  HidInit(''); //HidInit('hidapi-0.10.0.dll');
+  WriteLn('HIDAPI.pas demo ( using HidApi ', HidApiVersionStr, ' library ).');
   WriteLn();
   EnumerationDemo;
   OpenAndReadDemo;
