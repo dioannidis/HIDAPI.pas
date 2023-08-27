@@ -76,7 +76,9 @@ begin
   else begin
     WriteLn('device is open ...');
     WriteLn();
+{$ifdef MSWINDOWS}
     WriteLn('Container ID : ', Device.GetContainerID.ToString());
+{$endif}
     WriteLn('Manufacturer : ', Device.GetManufacturerString);
     WriteLn('Product      : ', Device.GetProductString);
     WriteLn();
@@ -90,6 +92,7 @@ begin
       Write(#13);
     end;
     WriteLn();
+    WriteLn();
     WriteLn('closing device');
     Device.Close;
   end;
@@ -98,6 +101,8 @@ end;
 begin
   HidInit('');
   //HidInit('hidapi-0.10.0.dll');
+  WriteLn('HIDAPI.pas demo ( using HidApi ', HidApiVersion, ' library ).');
+  WriteLn();
   EnumerationDemo;
   OpenAndReadDemo;
   HidExit();
