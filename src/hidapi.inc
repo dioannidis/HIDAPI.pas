@@ -24,6 +24,8 @@ TCWCharArray = array of TCWChar;
 
 type
 
+{$minEnumSize 1}
+
   { HID underlying bus types }
 
   THidBusType  = (HID_API_BUS_UNKNOWN,
@@ -31,6 +33,8 @@ type
                   HID_API_BUS_BLUETOOTH,
                   HID_API_BUS_I2C,
                   HID_API_BUS_SPI);
+
+{$minEnumSize default}
 
   { THidDeviceInfo }
 
