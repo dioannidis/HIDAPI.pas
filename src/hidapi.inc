@@ -24,30 +24,7 @@ TCWCharArray = array of TCWChar;
 
 type
 
-  { THidDevice }
-
-  PHidDevice = ^THidDevice;
-
-  THidDevice = object
-    function Write(const Data; Length: SizeInt): SizeInt;
-    function Read(out Data; Length: SizeInt): SizeInt;
-    function ReadTimeout(out Data; Length: SizeInt; Millis: Integer): SizeInt;
-    function SetNonBlocking(NonBlock: Integer): Integer;
-    function GetInputReport(const Data; Length: SizeInt): SizeInt;
-    function SendFeatureReport(const Data; Length: SizeInt): SizeInt;
-    function GetFeatureReport(out Data; Length: SizeInt): SizeInt;
-    function GetManufacturerString: UnicodeString;
-    function GetProductString: UnicodeString;
-    function GetSerialNumberString: UnicodeString;
-    function GetIndexedString(Index: Integer): UnicodeString;
-    function GetError: UnicodeString;
-    function GetContainerID: TGuid;
-    procedure Close;
-    function Open(VID: Word;PID: Word;const SerialNumber: {$ifdef MSWINDOWS}String{$else}UnicodeString{$endif}): PHidDevice; static;
-    function OpenPath(const DevicePath: String): PHidDevice; static;
-  end;
-
-  { THidDeviceInfo }
+{ THidDeviceInfo }
 
   PHidDeviceInfo = ^THidDeviceInfo;
 
@@ -63,8 +40,33 @@ type
     Usage: Word;
     InterfaceNumber: Integer;
     Next: PHidDeviceInfo;
+    BusType: Byte;
     function Enumerate(VID: Word; PID: Word): PHidDeviceInfo; static;
     procedure Free;
+  end;
+
+  { THidDevice }
+
+  PHidDevice = ^THidDevice;
+
+  THidDevice = object
+    function Write(const Data; Length: SizeInt): SizeInt;
+    function Read(out Data; Length: SizeInt): SizeInt;
+    function ReadTimeout(out Data; Length: SizeInt; Millis: Integer): SizeInt;
+    function SetNonBlocking(NonBlock: Integer): Integer;
+    function GetInputReport(const Data; Length: SizeInt): SizeInt;
+    function SendFeatureReport(const Data; Length: SizeInt): SizeInt;
+    function GetFeatureReport(out Data; Length: SizeInt): SizeInt;
+    function GetManufacturerString: UnicodeString;
+    function GetProductString: UnicodeString;
+    function GetSerialNumberString: UnicodeString;
+    function GetDeviceInfo: PHidDeviceInfo;
+    function GetIndexedString(Index: Integer): UnicodeString;
+    function GetError: UnicodeString;
+    function GetContainerID: TGuid;
+    procedure Close;
+    function Open(VID: Word;PID: Word;const SerialNumber: {$ifdef MSWINDOWS}String{$else}UnicodeString{$endif}): PHidDevice; static;
+    function OpenPath(const DevicePath: String): PHidDevice; static;
   end;
 
   function HidInit(const ALibraryName: String = ''): Integer;
@@ -93,13 +95,18 @@ uses
   0.10.0                  0100
   0.11.2                  0112
   0.12.0                  0120
+  0.13.0                  0130
+  0.13.1                  0131
+  0.14.0                  0140
 }
+
   {$ifndef HIDAPI_VERSION}
     {$warning For static loading you need to define the version of the HidApi library. }
     {$warning i.e. for 0.9.0 use HIDAPI_VERSION = 0090 or for 0.10.0 HIDAPI_VERSION = 0100 etc. }
     {$warning else static loading defaults to 0.9.0 hidapi version library .}
-     {$define HIDAPI_VERSION := 0090}
+    {$define HIDAPI_VERSION := 0000}
   {$endif}
+
 {$endif}
 
 const
@@ -154,6 +161,9 @@ const
 {$ifdef S}function{$else}var{$endif}hid_get_manufacturer_string{$ifdef D}: function{$endif}(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$ifdef S}function{$else}var{$endif}hid_get_product_string{$ifdef D}: function{$endif}(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$ifdef S}function{$else}var{$endif}hid_get_serial_number_string{$ifdef D}: function{$endif}(device: PHidDevice; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$if (HIDAPI_VERSION > 0120) or defined(D)}
+{$ifdef S}function{$else}var{$endif}hid_get_device_info{$ifdef D}: function{$endif}(device: PHidDevice): PHidDeviceInfo; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$endif}
 {$ifdef S}function{$else}var{$endif}hid_get_indexed_string{$ifdef D}: function{$endif}(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$ifdef S}function{$else}var{$endif}hid_error{$ifdef D}: function{$endif}(device: PHidDevice): PCWChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$if (HIDAPI_VERSION > 0090) or defined(D)}
@@ -201,6 +211,7 @@ begin
     Pointer(hid_get_manufacturer_string)  := GetProcAddress(HidApiLibraryHandle, 'hid_get_manufacturer_string');
     Pointer(hid_get_product_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_product_string');
     Pointer(hid_get_serial_number_string) := GetProcAddress(HidApiLibraryHandle, 'hid_get_serial_number_string');
+    Pointer(hid_get_device_info)          := GetProcAddress(HidApiLibraryHandle, 'hid_get_device_info');
     Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
     Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
     Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
@@ -393,6 +404,17 @@ var
 begin
   hid_get_serial_number_string(@Self, @Buf, Length(Buf) - 1);
   Result := PCWCharToUnicodeString(@Buf);
+end;
+
+function THidDevice.GetDeviceInfo: PHidDeviceInfo;
+begin
+  Result := nil;
+{$if (HIDAPI_VERSION > 0120) and defined(S)}
+  Result := hid_get_device_info(@Self);
+{$elseif defined(D)}
+  if Pointer(hid_get_device_info) <> nil then
+    Result := hid_get_device_info(@Self);
+{$endif}
 end;
 
 function THidDevice.GetIndexedString(Index: Integer): UnicodeString;
