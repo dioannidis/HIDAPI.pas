@@ -40,7 +40,7 @@ type
   { HidApiVersion }
 
   THidApiVersion = packed record
-    Major, Minor, Patch: SizeInt;
+    Major, Minor, Patch: Integer;
   end;
   PHidApiVersion = ^THidApiVersion;
 
