@@ -38,7 +38,7 @@ begin
     if HidApiVersion.Minor > 12 then
     begin
       WriteStr(BusType, EnumItem.BusType);
-      WriteLn(Format('Found: %s in [%s] (%0.4x:%0.4x) at: %s', [ProductName, BusType, Vid, Pid, Path]))
+      WriteLn(Format('Found: %s (%0.4x:%0.4x) in [%s] at: %s', [ProductName, BusType, Vid, Pid, Path]))
     end
     else
       WriteLn(Format('Found: %s (%0.4x:%0.4x) at: %s', [ProductName, Vid, Pid, Path]));
