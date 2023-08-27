@@ -24,7 +24,15 @@ TCWCharArray = array of TCWChar;
 
 type
 
-{ THidDeviceInfo }
+  { HID underlying bus types }
+
+  THidBusType  = (HID_API_BUS_UNKNOWN,
+                  HID_API_BUS_USB,
+                  HID_API_BUS_BLUETOOTH,
+                  HID_API_BUS_I2C,
+                  HID_API_BUS_SPI);
+
+  { THidDeviceInfo }
 
   PHidDeviceInfo = ^THidDeviceInfo;
 
@@ -40,7 +48,7 @@ type
     Usage: Word;
     InterfaceNumber: Integer;
     Next: PHidDeviceInfo;
-    BusType: Byte;
+    BusType: THidBusType;
     function Enumerate(VID: Word; PID: Word): PHidDeviceInfo; static;
     procedure Free;
   end;
