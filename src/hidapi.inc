@@ -36,6 +36,13 @@ type
 
 {$minEnumSize default}
 
+  { HidApiVersion }
+
+  THidApiVersion = packed record
+    Major, Minor, Patch: SizeInt;
+  end;
+  PHidApiVersion = ^THidApiVersion;
+
   { THidDeviceInfo }
 
   PHidDeviceInfo = ^THidDeviceInfo;
@@ -83,7 +90,8 @@ type
 
   function HidInit(const ALibraryName: String = ''): Integer;
   function HidExit: Integer;
-  function HidApiVersion: String;
+  function HidApiVersionStr: String;
+  function HidApiVersion: PHidApiVersion;
 
   function PCWCharToUnicodeString(P: PCWChar): UnicodeString;
 
@@ -178,6 +186,7 @@ const
 {$endif}
 {$ifdef S}function{$else}var{$endif}hid_get_indexed_string{$ifdef D}: function{$endif}(device: PHidDevice; string_index: Integer; str: PCWChar; maxlen: SizeInt): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$ifdef S}function{$else}var{$endif}hid_error{$ifdef D}: function{$endif}(device: PHidDevice): PCWChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
+{$ifdef S}function{$else}var{$endif}hid_version{$ifdef D}: function{$endif}:PHidApiVersion ; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$if (HIDAPI_VERSION > 0090) or defined(D)}
 {$ifdef S}function{$else}var{$endif}hid_version_str{$ifdef D}: function{$endif}: PChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$endif}
@@ -226,6 +235,7 @@ begin
     Pointer(hid_get_device_info)          := GetProcAddress(HidApiLibraryHandle, 'hid_get_device_info');
     Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
     Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
+    Pointer(hid_version)                  := GetProcAddress(HidApiLibraryHandle, 'hid_version');
     Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
     Pointer(hid_winapi_get_container_id)  := GetProcAddress(HidApiLibraryHandle, 'hid_winapi_get_container_id');
   end
@@ -307,7 +317,7 @@ begin
 end;
 {$endif}
 
-function HidApiVersion: string;
+function HidApiVersionStr: string;
 begin
   Result := '0.9.0_or_older';
 {$if (HIDAPI_VERSION > 0090) and defined(S)}
@@ -316,6 +326,11 @@ begin
   if Pointer(hid_version_str) <> nil then
     Result := hid_version_str();
 {$endif}
+end;
+
+function HidApiVersion: PHidApiVersion;
+begin
+  Result := hid_version();
 end;
 
 { Initialize and deinitialize the HIDAPI }
