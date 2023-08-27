@@ -92,7 +92,7 @@ begin
     begin
       I := Device.GetReportDescriptor(ReportDescriptor, HID_API_MAX_REPORT_DESCRIPTOR_SIZE);
       Write('Report Descr : ');
-      for J := 0  to I do
+      for J := 0  to I - 1 do
           Write(Format('%0.2x ', [ReportDescriptor[J]]));
       WriteLn();
     end
