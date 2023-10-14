@@ -12,9 +12,9 @@
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="libhidapi bindings. Supports Windows, Linux and macOS."/>
+    <Description Value="libhidapi bindings. Supports Linux, Windows, FreeBSD and MacOS."/>
     <License Value="GPL 2"/>
-    <Version Minor="4" Release="1"/>
+    <Version Minor="5"/>
     <Files Count="1">
       <Item1>
         <Filename Value="hidapi.pas"/>
