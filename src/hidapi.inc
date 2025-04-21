@@ -198,10 +198,11 @@ const
 {$if (HIDAPI_VERSION > 0090) or defined(D)}
 {$ifdef S}function{$else}var{$endif}hid_version_str{$ifdef D}: function{$endif}: PChar; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$endif}
+{$ifdef MSWINDOWS}
 {$if (HIDAPI_VERSION > 0120) or defined(D)}
 {$ifdef S}function{$else}var{$endif}hid_winapi_get_container_id{$ifdef D}: function{$endif}(device: PHidDevice; container_id: Pointer): Integer; HIDAPI_CALL; {$ifdef S}external LIBHIDAPI;{$endif}
 {$endif}
-
+{$endif}
 {$ifdef HIDAPI_LOAD_DYNAMICALLY}
 
 ResourceString
