@@ -90,11 +90,14 @@ type
     function OpenPath(const DevicePath: String): PHidDevice; static;
   end;
 
+{$ifdef HIDAPI_LOAD_DYNAMICALLY}
   function HidInit(const ALibraryName: String = ''): Integer;
+{$else}
+  function HidInit: Integer;
+{$endif}
   function HidExit: Integer;
   function HidApiVersionStr: String;
   function HidApiVersion: PHidApiVersion;
-
   function PCWCharToUnicodeString(P: PCWChar): UnicodeString;
 
 
@@ -208,9 +211,13 @@ ResourceString
 var
   HidApiLibraryRefCount: byte;
   HidApiLibraryHandle: TLibHandle;
-  HidApiLoadedLibrary: String = '';
+  HidApiLoadedLibrary: String = LIBHIDAPI;
+  _HidApiVersionStr: string;
+  _HidApiVersion: THidApiVersion;
 
 function TryInitializeHidApi(LibraryName: string): byte;
+var
+  pVersion: PHidApiVersion;
 begin
   Result := 0;
   if HidApiLibraryRefCount = 0 then
@@ -220,30 +227,56 @@ begin
       Exit;
     Inc(HidApiLibraryRefCount);
     HidApiLoadedLibrary := LibraryName;
-    Pointer(hid_init)                     := GetProcAddress(HidApiLibraryHandle, 'hid_init');
-    Pointer(hid_exit)                     := GetProcAddress(HidApiLibraryHandle, 'hid_exit');
-    Pointer(hid_enumerate)                := GetProcAddress(HidApiLibraryHandle, 'hid_enumerate');
-    Pointer(hid_free_enumeration)         := GetProcAddress(HidApiLibraryHandle, 'hid_free_enumeration');
-    Pointer(hid_open)                     := GetProcAddress(HidApiLibraryHandle, 'hid_open');
-    Pointer(hid_open_path)                := GetProcAddress(HidApiLibraryHandle, 'hid_open_path');
-    Pointer(hid_write)                    := GetProcAddress(HidApiLibraryHandle, 'hid_write');
-    Pointer(hid_read_timeout)             := GetProcAddress(HidApiLibraryHandle, 'hid_read_timeout');
-    Pointer(hid_read)                     := GetProcAddress(HidApiLibraryHandle, 'hid_read');
-    Pointer(hid_set_nonblocking)          := GetProcAddress(HidApiLibraryHandle, 'hid_set_nonblocking');
-    Pointer(hid_send_feature_report)      := GetProcAddress(HidApiLibraryHandle, 'hid_send_feature_report');
-    Pointer(hid_get_feature_report)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_feature_report');
-    Pointer(hid_get_input_report)         := GetProcAddress(HidApiLibraryHandle, 'hid_get_input_report');
+
     Pointer(hid_close)                    := GetProcAddress(HidApiLibraryHandle, 'hid_close');
+    Pointer(hid_enumerate)                := GetProcAddress(HidApiLibraryHandle, 'hid_enumerate');
+    Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
+    Pointer(hid_exit)                     := GetProcAddress(HidApiLibraryHandle, 'hid_exit');
+    Pointer(hid_free_enumeration)         := GetProcAddress(HidApiLibraryHandle, 'hid_free_enumeration');
+    Pointer(hid_get_feature_report)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_feature_report');
+    Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
     Pointer(hid_get_manufacturer_string)  := GetProcAddress(HidApiLibraryHandle, 'hid_get_manufacturer_string');
     Pointer(hid_get_product_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_product_string');
     Pointer(hid_get_serial_number_string) := GetProcAddress(HidApiLibraryHandle, 'hid_get_serial_number_string');
-    Pointer(hid_get_device_info)          := GetProcAddress(HidApiLibraryHandle, 'hid_get_device_info');
-    Pointer(hid_get_indexed_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_indexed_string');
-    Pointer(hid_get_report_descriptor)    := GetProcAddress(HidApiLibraryHandle, 'hid_get_report_descriptor');
-    Pointer(hid_error)                    := GetProcAddress(HidApiLibraryHandle, 'hid_error');
+    Pointer(hid_init)                     := GetProcAddress(HidApiLibraryHandle, 'hid_init');
+    Pointer(hid_open)                     := GetProcAddress(HidApiLibraryHandle, 'hid_open');
+    Pointer(hid_open_path)                := GetProcAddress(HidApiLibraryHandle, 'hid_open_path');
+    Pointer(hid_read)                     := GetProcAddress(HidApiLibraryHandle, 'hid_read');
+    Pointer(hid_read_timeout)             := GetProcAddress(HidApiLibraryHandle, 'hid_read_timeout');
+    Pointer(hid_send_feature_report)      := GetProcAddress(HidApiLibraryHandle, 'hid_send_feature_report');
+    Pointer(hid_set_nonblocking)          := GetProcAddress(HidApiLibraryHandle, 'hid_set_nonblocking');
+    Pointer(hid_write)                    := GetProcAddress(HidApiLibraryHandle, 'hid_write');
+
     Pointer(hid_version)                  := GetProcAddress(HidApiLibraryHandle, 'hid_version');
-    Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
-    Pointer(hid_winapi_get_container_id)  := GetProcAddress(HidApiLibraryHandle, 'hid_winapi_get_container_id');
+    if hid_version <> nil then
+    begin
+
+      pVersion := hid_version();
+      _HidApiVersion := pVersion^;
+
+      Pointer(hid_version_str)              := GetProcAddress(HidApiLibraryHandle, 'hid_version_str');
+      _HidApiVersionStr := hid_version_str();
+
+      Pointer(hid_get_input_report)         := GetProcAddress(HidApiLibraryHandle, 'hid_get_input_report');
+
+{$ifdef MSWINDOWS}
+      if _HidApiVersion.Minor > 11 then
+        Pointer(hid_winapi_get_container_id)  := GetProcAddress(HidApiLibraryHandle, 'hid_winapi_get_container_id');
+{$endif}
+
+      if _HidApiVersion.Minor > 12 then
+        Pointer(hid_get_device_info)          := GetProcAddress(HidApiLibraryHandle, 'hid_get_device_info');
+
+      if _HidApiVersion.Minor > 13 then
+        Pointer(hid_get_report_descriptor)    := GetProcAddress(HidApiLibraryHandle, 'hid_get_report_descriptor');
+    end
+    else
+    begin
+      _HidApiVersionStr := '0.9.0_or_older';
+      _HidApiVersion.Major := 0;
+      _HidApiVersion.Minor := 9;
+      _HidApiVersion.Patch := 0;
+    end;
   end
   else
     Inc(HidApiLibraryRefCount);
@@ -329,25 +362,27 @@ begin
 {$if (HIDAPI_VERSION > 0090) and defined(S)}
   Result := hid_version_str();
 {$elseif defined(D)}
-  if Pointer(hid_version_str) <> nil then
-    Result := hid_version_str();
+  Result := _HidApiVersionStr;
 {$endif}
 end;
 
 function HidApiVersion: PHidApiVersion;
 begin
-  Result := hid_version();
+  Result := @_HidApiVersion;
 end;
 
 { Initialize and deinitialize the HIDAPI }
 
-function HidInit(const ALibraryName: String = ''): Integer;
+{$ifdef HIDAPI_LOAD_DYNAMICALLY}
+  function HidInit(const ALibraryName: String = ''): Integer;
+{$else}
+  function HidInit: Integer;
+{$endif}
 begin
 {$ifdef HIDAPI_LOAD_DYNAMICALLY}
   if ALibraryName <> '' then
-    InitializeHidApi(LIBHIDAPI)
-  else
-    InitializeHidApi(LIBHIDAPI);
+    HidApiLoadedLibrary := ALibraryName;
+  InitializeHidApi(HidApiLoadedLibrary);
 {$endif}
   Result :=  hid_init();
 end;
