@@ -14,7 +14,7 @@
     </CompilerOptions>
     <Description Value="libhidapi bindings. Supports Linux, Windows, FreeBSD and MacOS."/>
     <License Value="GPL 2"/>
-    <Version Minor="5"/>
+    <Version Minor="5" Release="1"/>
     <Files Count="1">
       <Item1>
         <Filename Value="hidapi.pas"/>
