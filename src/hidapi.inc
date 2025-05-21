@@ -159,6 +159,10 @@ const
       LIBHIDAPI = 'libhidapi.so';
       {$linklib libhidapi}
     {$endif}
+    {$ifdef OPENBSD}
+      LIBHIDAPI = 'libhidapi.so';
+      {$linklib libhidapi}
+    {$endif}
     {$ifdef DARWIN}
       LIBHIDAPI = 'hidapi';
       {$linklib hidapi}
@@ -239,7 +243,11 @@ begin
     Pointer(hid_get_manufacturer_string)  := GetProcAddress(HidApiLibraryHandle, 'hid_get_manufacturer_string');
     Pointer(hid_get_product_string)       := GetProcAddress(HidApiLibraryHandle, 'hid_get_product_string');
     Pointer(hid_get_serial_number_string) := GetProcAddress(HidApiLibraryHandle, 'hid_get_serial_number_string');
+{$ifdef OPENBSD}
+    Pointer(hid_init)                     := GetProcAddress(HidApiLibraryHandle, 'hidapi_hid_init');
+{$else}
     Pointer(hid_init)                     := GetProcAddress(HidApiLibraryHandle, 'hid_init');
+{$endif}
     Pointer(hid_open)                     := GetProcAddress(HidApiLibraryHandle, 'hid_open');
     Pointer(hid_open_path)                := GetProcAddress(HidApiLibraryHandle, 'hid_open_path');
     Pointer(hid_read)                     := GetProcAddress(HidApiLibraryHandle, 'hid_read');
